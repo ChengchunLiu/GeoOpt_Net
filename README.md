@@ -122,7 +122,6 @@ The inference script uses only:
 
 The output is a refined XYZ geometry predicted by GeoOpt-Net in a single forward pass.
 
-No DFT reference geometry is required for inference.
 
 ### Example workflow
 
