@@ -69,77 +69,236 @@ If you find this project useful in your research, please cite:
 
 ---
 
-## Inference: Refining a User-Provided Geometry
+# Case study: GeoOpt-Net inference and Kabsch-aligned RMSD evaluation
 
-GeoOpt-Net provides an inference script for refining an initial molecular geometry using a trained checkpoint.
-The inference workflow takes a molecular identity, an initial 3D structure, and a trained model checkpoint as input, and outputs a refined molecular geometry in XYZ format.
+This folder provides a case study for comparing RDKit/MMFF, xTB, and GeoOpt-Net geometries against B3LYP/TZVP reference structures.
 
-### 1. Prepare an initial XYZ geometry
+The complete workflow is:
 
-For example, an initial carbon monoxide geometry can be saved as `co_input.xyz`:
+1. construct a molecular graph from a SMILES string;
+2. generate or provide an initial 3D geometry, for example from RDKit/MMFF;
+3. refine the initial geometry using `inference/infer_geometry.py`;
+4. optionally evaluate the refined geometry against a reference structure using `scripts/compute_aligned_rmsd.py`.
 
-```xyz
-2
-CO initial geometry
-C  0.000000  0.000000  0.000000
-O  1.150000  0.000000  0.000000
+
+---
+
+## 1. Directory structure
+
+The case study is organized as follows:
+
+```text
+case_study/
+├── GeoOpt-Net/
+│   └── GeoOpt-Net-refined XYZ files
+├── RDKit/
+│   └── RDKit/MMFF initial XYZ files
+├── opt-xyz-xtb/
+│   └── xTB-optimized XYZ files
+├── reference-B3LYP-TZVP/
+│   └── B3LYP/TZVP reference XYZ files
+└── readme.md
 ```
 
-### 2. Place the trained checkpoint
 
-Put the trained checkpoint under the `model/` directory, for example:
+---
 
-```bash
+## 2. Prepare a molecular input from SMILES
+
+For example, acetylene can be represented by the SMILES string:
+
+```text
+C#C
+```
+
+For example, an RDKit/MMFF-generated initial geometry can be saved as:
+
+```text
+case_study/RDKit/case_001_input.xyz
+```
+
+with coordinates such as:
+
+```xyz
+4
+Acetylene initial geometry from RDKit/MMFF
+C  -0.5933596492  0.0305018742  0.0602263398
+C   0.5933601856 -0.0305036865  0.2296369672
+H  -1.6471040249  0.0846735016 -0.0901968554
+H   1.6471035480 -0.0846716911  0.3800690770
+```
+
+
+---
+
+## 3. Place the trained model file
+
+Put the trained model file under the `model/` directory, for example:
+
+```text
 model/best_model.pt
 ```
 
-### 3. Run inference
+---
 
-Use `infer_geometry.py` to refine the initial geometry:
+## 4. Run GeoOpt-Net single-step inference
+
+Use `inference/infer_geometry.py` to refine the RDKit/MMFF initial geometry:
 
 ```bash
-python infer_geometry.py \
-  --smiles "[C-]#[O+]" \
-  --input_xyz co_input.xyz \
+python inference/infer_geometry.py \
+  --smiles "C#C" \
+  --input_xyz case_study/RDKit/case_001_input.xyz \
   --checkpoint model/best_model.pt \
-  --output_xyz co_refined.xyz \
+  --output_xyz case_study/GeoOpt-Net/case_001_output.xyz \
   --project_root .
 ```
 
 The refined geometry will be written to:
 
-```bash
-co_refined.xyz
+```text
+case_study/GeoOpt-Net/case_001_output.xyz
 ```
 
-### 4. Input and output
+For example, the GeoOpt-Net-refined output may look like:
 
-The inference script uses only:
-
-* the molecular graph constructed from the SMILES string;
-* the user-provided initial Cartesian coordinates;
-* the frozen trained checkpoint.
-
-The output is a refined XYZ geometry predicted by GeoOpt-Net in a single forward pass.
-
-
-### Example workflow
-
-```bash
-# Clone the repository
-git clone https://github.com/ChengchunLiu/GeoOpt_Net.git
-cd GeoOpt_Net
-
-# Create a model directory and place the checkpoint inside it
-mkdir -p model
-
-# Run GeoOpt-Net inference
-python infer_geometry.py \
-  --smiles "[C-]#[O+]" \
-  --input_xyz co_input.xyz \
-  --checkpoint model/best_model.pt \
-  --output_xyz co_refined.xyz \
-  --project_root .
+```xyz
+4
+Acetylene refined geometry by GeoOpt-Net
+C  -0.5941444635  0.0083292369  0.0734921694
+C   0.5944776535 -0.0070936605  0.2159397304
+H  -1.6498693228  0.0199433640 -0.0533744097
+H   1.6495361328 -0.0211789384  0.3436780274
 ```
 
-After running the command, the refined molecular geometry can be found in `co_refined.xyz`.
+
+
+---
+
+## 5. Reference geometry for evaluation
+
+The corresponding B3LYP/TZVP reference structure is stored under:
+
+```text
+case_study/reference-B3LYP-TZVP/
+```
+
+For example:
+
+```text
+case_study/reference-B3LYP-TZVP/case_001_reference.xyz
+```
+
+with coordinates such as:
+
+```xyz
+4
+Acetylene reference geometry at B3LYP/TZVP
+C   0.0000000000 -0.0000000000 -0.5989660025
+C  -0.0000000000 -0.0000000000  0.5989660025
+H   0.0000000000 -0.0000000000 -1.6615680456
+H  -0.0000000000 -0.0000000000  1.6615680456
+```
+
+
+---
+
+## 6. Compute Kabsch-aligned RMSD for one molecule
+
+RMSD evaluation is performed using:
+
+```text
+scripts/compute_aligned_rmsd.py
+```
+
+For a single GeoOpt-Net output and its corresponding B3LYP/TZVP reference structure:
+
+```bash
+python scripts/compute_aligned_rmsd.py \
+  --output-xyz case_study/GeoOpt-Net/case_001_output.xyz \
+  --reference-xyz case_study/reference-B3LYP-TZVP/case_001_reference.xyz \
+  --out-csv case_study/case_001_geooptnet_rmsd.csv
+```
+
+The script performs atom-order-preserving Kabsch alignment and reports the aligned RMSD in Å.
+
+The output CSV contains columns such as:
+
+```text
+molecule_id,output_xyz,reference_xyz,n_atoms,aligned_rmsd_A,status,error_message
+```
+
+---
+
+## 7. Batch RMSD evaluation for GeoOpt-Net
+
+To evaluate all GeoOpt-Net-refined structures against the same B3LYP/TZVP references:
+
+```bash
+python scripts/compute_aligned_rmsd.py \
+  --output-dir case_study/GeoOpt-Net \
+  --reference-dir case_study/reference-B3LYP-TZVP \
+  --out-csv case_study/geooptnet_aligned_rmsd.csv
+```
+
+The script matches files by molecule identifier. For example, the following pair will be matched automatically:
+
+```text
+case_study/GeoOpt-Net/case_001_output.xyz
+case_study/reference-B3LYP-TZVP/case_001_reference.xyz
+```
+
+---
+
+## 8. Batch RMSD evaluation for RDKit/MMFF and xTB
+
+The same RMSD script can also be used to evaluate RDKit/MMFF and xTB geometries against the same B3LYP/TZVP reference structures.
+
+For RDKit/MMFF:
+
+```bash
+python scripts/compute_aligned_rmsd.py \
+  --output-dir case_study/RDKit \
+  --reference-dir case_study/reference-B3LYP-TZVP \
+  --out-csv case_study/rdkit_aligned_rmsd.csv
+```
+
+For xTB:
+
+```bash
+python scripts/compute_aligned_rmsd.py \
+  --output-dir case_study/opt-xyz-xtb \
+  --reference-dir case_study/reference-B3LYP-TZVP \
+  --out-csv case_study/xtb_aligned_rmsd.csv
+```
+
+This ensures that RDKit/MMFF, xTB, and GeoOpt-Net are evaluated against the same B3LYP/TZVP references using the same atom-order-preserving Kabsch-aligned RMSD protocol.
+
+---
+
+## 9. Optional: write aligned XYZ files
+
+To save the Kabsch-aligned GeoOpt-Net output structures:
+
+```bash
+python scripts/compute_aligned_rmsd.py \
+  --output-dir case_study/GeoOpt-Net \
+  --reference-dir case_study/reference-B3LYP-TZVP \
+  --out-csv case_study/geooptnet_aligned_rmsd.csv \
+  --write-aligned-dir case_study/GeoOpt-Net-aligned
+```
+
+The aligned XYZ files will be written to:
+
+```text
+case_study/GeoOpt-Net-aligned/
+```
+
+---
+
+## Notes
+
+- GeoOpt-Net is used as a single-step local geometry-refinement model.
+- The input XYZ geometry should be chemically reasonable, for example an RDKit/MMFF-optimized structure.
+- The B3LYP/TZVP reference XYZ files are used only for evaluation.
+- The RMSD script does not reorder atoms. Atom counts and element ordering must match between the output XYZ and the reference XYZ.
