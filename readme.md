@@ -56,18 +56,22 @@ cd GeoOpt_Net
 ```
 ---
 
+
 ## Citation
 
-If you find this project useful in your research, please cite:
+If you find GeoOpt-Net useful in your research, please cite the following publication:
 
-```bash
-@article{liu2026geooptnet,
-  title={A Cross-Domain Graph Learning Protocol for Single-Step Molecular Geometry Refinement},
-  author={Liu, Chengchun and Cai, Wendi and Zhao, Boxuan and Mo, Fanyang},
-  journal={arXiv preprint arXiv:2601.22723},
-  year={2026}
+```bibtex
+@article{liu2026crossdomain,
+  title   = {A Cross-Domain Graph Learning Protocol for Single-Step Molecular Geometry Refinement},
+  author  = {Liu, Chengchun and Cai, Wendi and Zhao, Boxuan and Mo, Fanyang},
+  journal = {Journal of Chemical Theory and Computation},
+  year    = {2026},
+  doi     = {10.1021/acs.jctc.6c01080},
+  url     = {https://doi.org/10.1021/acs.jctc.6c01080}
 }
 ```
+
 
 
 ---
