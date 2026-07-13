@@ -29,15 +29,18 @@ GeoOpt-Net is built on a multi-branch **SE(3)-equivariant graph neural architect
 
 ---
 
-## Preprint
+## Publication
 
-This repository accompanies our preprint:
+This repository accompanies the following publication:
 
-**A Cross-Domain Graph Learning Protocol for Single-Step Molecular Geometry Refinement**  
-**Chengchun Liu, Wendi Cai, Boxuan Zhao, Fanyang Mo**  
-**arXiv:2601.22723 (2026)**
+**A Cross-Domain Graph Learning Protocol for Single-Step Molecular Geometry Refinement**
+**Chengchun Liu, Wendi Cai, Boxuan Zhao, and Fanyang Mo**
+*Journal of Chemical Theory and Computation* **2026**.
+https://doi.org/10.1021/acs.jctc.6c01080
 
+**Published article:** https://pubs.acs.org/doi/10.1021/acs.jctc.6c01080
 **Preprint:** https://arxiv.org/abs/2601.22723
+
 
 ---
 
